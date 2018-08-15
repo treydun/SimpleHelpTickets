@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.UUID;
 
 import me.odium.simplehelptickets.DBConnection;
 import me.odium.simplehelptickets.SimpleHelpTickets;
@@ -84,8 +85,15 @@ public class taketicket implements CommandExecutor {
 
       String id = rs.getString("id");
       //String owner = rs.getString("owner");
-      String UUID = rs.getString("UUID");
-      String owner = Bukkit.getOfflinePlayer(UUID).getName();
+      //String userID = rs.getString("UUID");
+      String ownerID = rs.getString("uuid");
+      String ownerName;
+      if(ownerID.equalsIgnoreCase("console")) {
+        ownerName = "Console";
+      } else {
+        ownerName = Bukkit.getOfflinePlayer(UUID.fromString(ownerID)).getName();
+      }
+      //String owner = Bukkit.getOfflinePlayer(UUID.fromString(userID)).getName();
       if (plugin.getConfig().getBoolean("MultiWorld") == true) {
         worldName = rs.getString("world");
       }
@@ -110,7 +118,7 @@ public class taketicket implements CommandExecutor {
       }
 
       sender.sendMessage(ChatColor.GOLD+"[ "+ChatColor.WHITE+ChatColor.BOLD+"Ticket "+id+ChatColor.RESET+ChatColor.GOLD+" ]");
-      sender.sendMessage(ChatColor.BLUE+" Owner: "+ChatColor.WHITE+owner);
+      sender.sendMessage(ChatColor.BLUE+" Owner: "+ChatColor.WHITE+ownerName);
       sender.sendMessage(ChatColor.BLUE+" Date: "+ChatColor.WHITE+date);
       if (plugin.getConfig().getBoolean("MultiWorld") == true) {
         sender.sendMessage(ChatColor.BLUE+" World: "+ChatColor.WHITE+worldName);
@@ -134,12 +142,12 @@ public class taketicket implements CommandExecutor {
       }
 
       // TELEPORT ADMIN
-      if (!owner.equalsIgnoreCase("CONSOLE")) {
+      if (!ownerName.equalsIgnoreCase("CONSOLE")) {
         player.teleport(locc);
       }
       // NOTIFY ADMIN AND USERS
       String admin = player.getName();
-      Player target = plugin.getServer().getPlayer(UUID);
+      Player target = plugin.getServer().getPlayer(ownerID);
       // ASSIGN ADMIN
       stmt.executeUpdate("UPDATE SHT_Tickets SET admin='"+admin+"' WHERE id='"+id+"'");
       // NOTIFY -OTHER- ADMINS 

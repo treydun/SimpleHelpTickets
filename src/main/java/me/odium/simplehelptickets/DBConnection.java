@@ -51,7 +51,7 @@ public class DBConnection {
       String queryC = "CREATE TABLE IF NOT EXISTS SHT_Tickets (id INTEGER PRIMARY KEY, description varchar(128), date timestamp, UUID varchar(36), world varchar(30), x double(30,20), y double(30,20), z double(30,20), p double(30,20), f double(30,20), adminreply varchar(128), userreply varchar(128), status varchar(16), admin varchar(30) collate nocase, expiration timestamp)";
       stmt.executeUpdate(queryC);
     } catch(Exception e) {
-      plugin.log.info("[SimpleHelpTickets] "+"Error: "+e);
+      plugin.log.info("[SimpleHelpTickets] "+"dbconn.createTable() Error: "+e);
     }
   }  
 

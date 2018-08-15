@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.UUID;
+
 import me.odium.simplehelptickets.DBConnection;
 import me.odium.simplehelptickets.SimpleHelpTickets;
 
@@ -65,7 +67,15 @@ public class checkticket implements CommandExecutor {
           String expiration;
 
           String id = rs.getString("id");
-          String owner = Bukkit.getOfflinePlayer(rs.getString("uuid")).getName();
+
+          String ownerID = rs.getString("uuid");
+          String ownerName;
+          if(ownerID.equalsIgnoreCase("console")) {
+            ownerName = "Console";
+          } else {
+            ownerName = Bukkit.getOfflinePlayer(UUID.fromString(ownerID)).getName();
+          }
+          //String owner = Bukkit.getOfflinePlayer(UUID.fromString(rs.getString("uuid"))).getName();
 
           if (plugin.getConfig().getBoolean("MySQL.USE_MYSQL")) {
             date = new SimpleDateFormat("dd/MMM/yy HH:mm").format(rs.getTimestamp("date"));  
@@ -85,7 +95,7 @@ public class checkticket implements CommandExecutor {
 
 
           sender.sendMessage(ChatColor.GOLD+"[ "+ChatColor.WHITE+ChatColor.BOLD+"Ticket "+id+ChatColor.RESET+ChatColor.GOLD+" ]");
-          sender.sendMessage(ChatColor.BLUE+" Owner: "+ChatColor.WHITE+owner);
+          sender.sendMessage(ChatColor.BLUE+" Owner: "+ChatColor.WHITE+ownerName);
           sender.sendMessage(ChatColor.BLUE+" Date: "+ChatColor.WHITE+date);
           if (plugin.getConfig().getBoolean("MultiWorld") == true) {
             sender.sendMessage(ChatColor.BLUE+" World: "+ChatColor.WHITE+world);
@@ -107,17 +117,21 @@ public class checkticket implements CommandExecutor {
           } else {
             sender.sendMessage(ChatColor.BLUE+" User Reply: "+ChatColor.YELLOW+userreply);
           }
+
           // IF AN EXPIRATION HAS BEEN APPLIED 
           if (plugin.getConfig().getBoolean("MySQL.USE_MYSQL")) {
-            if (rs.getTimestamp("expiration") != null) {
+            if (!rs.getString("expiration").equalsIgnoreCase("") || rs.getTimestamp("expiration") != null) {
               expiration = new SimpleDateFormat("dd/MMM/yy HH:mm").format(rs.getTimestamp("expiration"));
               sender.sendMessage(ChatColor.BLUE+" Expiration: "+ChatColor.WHITE+expiration);
             }
           } else {
-            if (rs.getTimestamp("expiration") != null) {
-              expiration = rs.getString("expiration");
-              sender.sendMessage(ChatColor.BLUE+" Expiration: "+ChatColor.WHITE+expiration);
+            if (!rs.getString("expiration").equalsIgnoreCase("")) {
+              if(rs.getTimestamp("expiration") != null){
+                expiration = rs.getString("expiration");
+                sender.sendMessage(ChatColor.BLUE+" Expiration: "+ChatColor.WHITE+expiration);
+              }
             }
+
             // COMPARE STRINGS
             //              int HasExpired = date.compareTo(expiration);
             //              if (HasExpired >= 0) {
@@ -131,7 +145,7 @@ public class checkticket implements CommandExecutor {
         }
 
       } catch (SQLException e) {
-        if (e.toString().contains("empty result set.")) {
+        if (e.toString().contains("empty result set.") || e.toString().contains("ResultSet closed")) {
           sender.sendMessage(plugin.getMessage("TicketNotExist").replace("&arg", args[0]));
           return true;          
         } else {
